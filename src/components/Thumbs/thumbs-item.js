@@ -6,10 +6,11 @@ class ThumbsItem extends Component {
   }
 
   render() {
+    const thumbs_special_position = this.props.thumbs_special_position
     const _thumbs_item_style = Object.assign({
-      float: 'left',
-      width: this.props.width,
-      height: 60,
+      float: thumbs_special_position ? 'none' : 'left',
+      width: thumbs_special_position ? 60 : this.props.width,
+      height: this.props.height || 60,
       backgroundImage: `url(${this.props.url})`,
       backgroundSize: 'contain',
       backgroundRepeat: 'no-repeat',

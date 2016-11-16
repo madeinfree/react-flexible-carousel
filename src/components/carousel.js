@@ -39,6 +39,7 @@ class Carousel extends Component {
       nextProps.use_thumbs !== this.props.use_thumbs ||
       nextProps.use_arrow !== this.props.use_arrow ||
       nextProps.options.thumbsPerPage !== this.props.options.thumbsPerPage ||
+      nextProps.options.thumbsPosition !== this.props.options.thumbsPosition ||
       nextState.actionID !== this.state.actionID ||
       nextState.wrapperIsHover !== this.state.wrapperIsHover ||
       nextProps.options.listWidth !== this.props.options.listWidth
@@ -148,8 +149,22 @@ class Carousel extends Component {
     })
   }
 
-  _render_thumbs = (thumbs_style, thumbs_item_style) => {
+  _render_thumbs = (thumbs_style, thumbs_item_style, specialPosition) => {
     if (this.props.use_thumbs) {
+      if (specialPosition) {
+        return (
+          <Thumbs
+            thumbsPerPage={ this.props.options.thumbsPerPage }
+            thumbs_style={ thumbs_style }
+            thumbs_item_style={ thumbs_item_style }
+            thumbs_special_position={ specialPosition }
+            actionID={ this.state.actionID }
+            listWidth={ Math.ceil(this.props.options.listWidth) }
+            listHeight={ Math.ceil(this.props.options.listHeight) }
+            urls={ this.props.urls }
+            handleChangeThumbsID={ this._handleChangeThumbsID.bind(this) } />
+        )
+      }
       return (
         <Thumbs
           thumbsPerPage={ this.props.options.thumbsPerPage }
@@ -186,9 +201,12 @@ class Carousel extends Component {
 
   render() {
     const {
-      custom_styles
+      custom_styles,
     } = this.props
+    const _thumbs_position = this.props.options.thumbsPosition || 'bottom'
+    const _special_thumbs_position = (_thumbs_position === 'left' || _thumbs_position === 'right')
     const _wrapper_style = {
+      display: _special_thumbs_position ? 'flex' : 'block',
       width: Math.ceil(this.props.options.listWidth),
       position: 'relative'
     }
@@ -200,6 +218,8 @@ class Carousel extends Component {
     return (
       <div
         style={ _wrapper_style }>
+        { _thumbs_position === 'top' ? this._render_thumbs.call(this, _thumbs_style, _thumbs_item_style) : null }
+        { _thumbs_position === 'left' ? this._render_thumbs.call(this, _thumbs_style, _thumbs_item_style, 'left') : null }
         <Wrapper
           ref={ node => this.wrapper = node }
           listWidth={ Math.ceil(this.props.options.listWidth) }
@@ -207,6 +227,7 @@ class Carousel extends Component {
           actionID={ this.state.actionID }
           carouse_wrapper_style={ _carousel_wrapper_style }
           styleEase={ this.props.styleEase }
+          special_thumbs_position={ _special_thumbs_position }
           touch_mode={ this.props.touch_mode }
           onWrapperMouseOver={ this._handleWrapperMouseOver.bind(this) }
           onWrapperMouseLeave={ this._handleWrapperMouseLeave.bind(this) }
@@ -214,7 +235,8 @@ class Carousel extends Component {
           { this._renderList.call(this, _carousel_list_style) }
         </Wrapper>
         { this._render_arrow.call(this) }
-        { this._render_thumbs.call(this, _thumbs_style, _thumbs_item_style) }
+        { _thumbs_position === 'bottom' ? this._render_thumbs.call(this, _thumbs_style, _thumbs_item_style) : null }
+        { _thumbs_position === 'right' ? this._render_thumbs.call(this, _thumbs_style, _thumbs_item_style, 'right') : null }
       </div>
     )
   }

@@ -43,8 +43,7 @@ class Wrapper extends Component {
     const inner_wrapper_style = Object.assign({}, {
       width: this.props.listWidth,
       height: this.props.listHeight,
-      overflow: 'hidden',
-      backgroundColor: 'white'
+      overflow: 'hidden'
     }, this.props.carouse_wrapper_style)
     const children_style = {
       width: Math.ceil(parseInt(this.props.listWidth, 10) * children_count),
