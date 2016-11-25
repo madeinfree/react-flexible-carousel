@@ -44,7 +44,7 @@ class Thumbs extends Component {
     if (thumbs_special_position) {
       thumbs_item_style = Object.assign({}, thumbs_item_style, {
         transform: this.props.actionID >= (_half_per_page) ?
-          `translateY(-${Math.ceil(parseInt(this.props.listWidth / thumbs_per_page, 10) * (thumbs_per_page % 2 === 0 ? (this.props.actionID - _half_per_page) + 0.52 :
+          `translateY(-${Math.ceil(parseInt(this.props.listHeight / thumbs_per_page, 10) * (thumbs_per_page % 2 === 0 ? (this.props.actionID - _half_per_page) + 0.52 :
             Math.ceil((this.props.actionID - _half_per_page))))}px)` :
             'translateY(0px)'
       })
