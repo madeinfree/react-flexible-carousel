@@ -1,6 +1,8 @@
-import React, { Component } from 'react'
-import { getDOMWidth } from '../util/findDOMNode'
-import { isFunction } from '../util/validateType'
+import React, { Component, PropTypes } from 'react'
+import {
+  isFunction,
+  isReactElement
+} from '../util/validateType'
 
 import Wrapper from './Wrapper/wrapper'
 import List from './Wrapper/list'
@@ -23,8 +25,7 @@ class Carousel extends Component {
   }
 
   componentDidMount() {
-    const auto_play_speed = this.props.options.auto_play_speed ? this.props.options.auto_play_speed : 1000
-    this.timer = setInterval(this._handleAutoPlay.bind(this), auto_play_speed)
+    this._handleBindAutoPlayTimer()
   }
 
   componentWillUnmount() {
@@ -37,6 +38,8 @@ class Carousel extends Component {
     return nextProps.urls !== this.props.urls ||
       nextProps.auto_play !== this.props.auto_play ||
       nextProps.use_thumbs !== this.props.use_thumbs ||
+      nextProps.custom_thumbs !== this.props.custom_thumbs ||
+      nextProps.custom_lists !== this.props.custom_lists ||
       nextProps.use_arrow !== this.props.use_arrow ||
       nextProps.options.thumbsPerPage !== this.props.options.thumbsPerPage ||
       nextProps.options.thumbsPosition !== this.props.options.thumbsPosition ||
@@ -67,6 +70,11 @@ class Carousel extends Component {
         }
       })
     }
+  }
+
+  _handleBindAutoPlayTimer() {
+    const auto_play_speed = this.props.options.auto_play_speed ? this.props.options.auto_play_speed : 1000
+    this.timer = setInterval(this._handleAutoPlay.bind(this), auto_play_speed)
   }
 
   _handleWrapperMouseOver() {
@@ -120,6 +128,10 @@ class Carousel extends Component {
   }
 
   _handleChangeThumbsID(id) {
+    if (this.timer) {
+      clearInterval(this.timer)
+      this._handleBindAutoPlayTimer()
+    }
     if (this.props.beforeActionIDChange) {
       if (isFunction(this.props.beforeActionIDChange, 'beforeActionIDChange')) {
         this.props.beforeActionIDChange(this.state.actionID)
@@ -137,19 +149,54 @@ class Carousel extends Component {
   }
 
   _renderList(carousel_list_style) {
+    const {
+      custom_lists
+    } = this.props
     const _use_lazy_load = this.props.lazy_load
-    return this.props.urls.map((url, idx) => {
-      return <List
-        width={ Math.ceil(this.props.options.listWidth) }
-        height={ this.state.options.listHeight }
-        carousel_list_style={ carousel_list_style }
-        key={ `cm-carousel-list-${url}-${idx}` }
-        idx={ idx }
-        url={ _use_lazy_load ? (idx === (this.state.actionID - 1) || idx === (this.state.actionID + 1) || idx === (this.state.actionID) ? url : '') : url } />
-    })
+
+    if (!custom_lists) {
+      return this.props.urls.map((url, idx) =>
+        <List
+          width={ Math.ceil(this.props.options.listWidth) }
+          height={ this.state.options.listHeight }
+          carousel_list_style={ carousel_list_style }
+          key={ `cm-carousel-list-${url}-${idx}` }
+          idx={ idx }
+          url={ _use_lazy_load ? (idx === (this.state.actionID - 1) || idx === (this.state.actionID + 1) || idx === (this.state.actionID) ? url : '') : url } /> /* eslint no-nested-ternary: 0 */
+      )
+    }
+    if (custom_lists) {
+      const reactElement = isReactElement(custom_lists)
+      const functionElement = isFunction(custom_lists)
+      if (reactElement) {
+        return (
+          React.createElement(custom_lists, {
+            setting: {
+              urls: this.props.urls,
+              width: Math.ceil(this.props.options.listWidth),
+              height: this.state.options.listHeight
+            }
+          })
+        )
+      }
+      if (functionElement) {
+        return (
+          React.cloneElement(this.props.custom_lists(
+            {
+              urls: this.props.urls,
+              width: Math.ceil(this.props.options.listWidth),
+              height: this.state.options.listHeight
+            }
+          ))
+        )
+      }
+      throw new Error('custom thumbs must be react component or function.')
+    }
+    return false
   }
 
-  _render_thumbs = (thumbs_style, thumbs_item_style, specialPosition) => {
+
+  _render_thumbs(thumbs_style, thumbs_item_style, specialPosition) {
     if (this.props.use_thumbs) {
       if (specialPosition) {
         return (
@@ -176,20 +223,46 @@ class Carousel extends Component {
           handleChangeThumbsID={ this._handleChangeThumbsID.bind(this) } />
       )
     }
+    if (custom_thumbs) {
+      const reactElement = isReactElement(custom_thumbs)
+      const functionElement = isFunction(custom_thumbs)
+      if (reactElement) {
+        return React.createElement(custom_thumbs, {
+          setting: {
+            actionID: this.state.actionID,
+            urls: this.props.urls
+          },
+          handler: {
+            handleChangeThumbsID: this._handleChangeThumbsID.bind(this)
+          }
+        })
+      }
+      if (functionElement) {
+        return custom_thumbs(
+          {
+            actionID: this.state.actionID,
+            urls: this.props.urls
+          },
+          { handleChangeThumbsID: this._handleChangeThumbsID.bind(this) }
+        )
+      }
+      throw new Error('custom thumbs must be react component or function.')
+    }
+    return false
   }
 
-  _render_arrow = () => {
+  _render_arrow() {
     if (this.props.use_arrow) {
       return (
         [
           <ArrowLeft
-            key={ `arrow-left` }
+            key={ 'arrow-left' }
             wrapperIsHover={ this.state.wrapperIsHover }
             handleArrowLeft={ this._handleArrowLeft.bind(this) }
             useLeftArrow={ this.props.use_left_arrow }
             wrapperHeight={ this.props.options.listHeight } />,
           <ArrowRight
-            key={ `arrow-right` }
+            key={ 'arrow-right' }
             wrapperIsHover={ this.state.wrapperIsHover }
             handleArrowRight={ this._handleArrowRight.bind(this) }
             useRightArrow={ this.props.use_right_arrow }
@@ -197,6 +270,7 @@ class Carousel extends Component {
         ]
       )
     }
+    return false
   }
 
   render() {
@@ -221,7 +295,7 @@ class Carousel extends Component {
         { _thumbs_position === 'top' ? this._render_thumbs.call(this, _thumbs_style, _thumbs_item_style) : null }
         { _thumbs_position === 'left' ? this._render_thumbs.call(this, _thumbs_style, _thumbs_item_style, 'left') : null }
         <Wrapper
-          ref={ node => this.wrapper = node }
+          ref={ node => this.wrapper = node } /* eslint no-return-assign: 0 */
           listWidth={ Math.ceil(this.props.options.listWidth) }
           listHeight={ this.state.options.listHeight }
           actionID={ this.state.actionID }
@@ -240,6 +314,34 @@ class Carousel extends Component {
       </div>
     )
   }
+}
+
+/* eslint react/forbid-prop-types: 0  */
+Carousel.propTypes = {
+  urls: PropTypes.array.isRequired,
+  options: PropTypes.object,
+
+  use_arrow: PropTypes.bool,
+  auto_play: PropTypes.bool,
+  use_thumbs: PropTypes.bool,
+  touch_mode: PropTypes.bool,
+  lazy_load: PropTypes.bool,
+
+  custom_styles: PropTypes.object,
+  styleEase: PropTypes.string,
+
+  custom_thumbs: PropTypes.func,
+  custom_lists: PropTypes.func,
+
+  use_left_arrow: PropTypes.element,
+  use_right_arrow: PropTypes.element,
+
+  beforeWrapperMouseOver: PropTypes.func,
+  afterWrapperMouseOver: PropTypes.func,
+  beforeWrapperMouseLeave: PropTypes.func,
+  afterWrapperMouseLeave: PropTypes.func,
+  beforeActionIDChange: PropTypes.func,
+  afterActionIDChange: PropTypes.func
 }
 
 export default Carousel

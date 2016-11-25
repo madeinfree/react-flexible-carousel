@@ -2,10 +2,6 @@ import React, { Component } from 'react'
 import ThumbsItem from './thumbs-item'
 
 class Thumbs extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   _render_thumbs_items(thumbs_item_style) {
     const thumbs_per_page = this.props.thumbsPerPage || 5
     return this.props.urls.map((url, idx) => {
@@ -35,15 +31,22 @@ class Thumbs extends Component {
       height: thumbs_special_position ? this.props.listHeight : '',
       overflow: 'hidden'
     }, this.props.thumbs_style)
+    const _half_per_page = thumbs_per_page > 2 ? (thumbs_per_page / 2) : Math.floor(thumbs_per_page / 2)
     let thumbs_item_style = {
       width: thumbs_special_position ? 60 : _wrapper_width,
       height: thumbs_special_position ? _wrapper_height : '',
       transition: 'transform .3s',
-      transform: (this.props.actionID > (thumbs_per_page - 2)) ? `translateX(-${Math.ceil(parseInt(this.props.listWidth / thumbs_per_page, 10) * (this.props.actionID - Math.floor(thumbs_per_page / 2)))}px)` : `translateX(0px)`
+      transform: this.props.actionID >= (_half_per_page) ?
+        `translateX(-${Math.ceil(parseInt(this.props.listWidth / thumbs_per_page, 10) * (thumbs_per_page % 2 === 0 ? (this.props.actionID - _half_per_page) + 0.52 :
+          Math.ceil((this.props.actionID - _half_per_page))))}px)` :
+          'translateX(0px)'
     }
     if (thumbs_special_position) {
       thumbs_item_style = Object.assign({}, thumbs_item_style, {
-        transform: (this.props.actionID > (thumbs_per_page - 2)) ? `translateY(-${Math.ceil(parseInt(this.props.listHeight / thumbs_per_page, 10) * (this.props.actionID - Math.floor(thumbs_per_page / 2)))}px)` : `translateY(0px)`
+        transform: this.props.actionID >= (_half_per_page) ?
+          `translateY(-${Math.ceil(parseInt(this.props.listWidth / thumbs_per_page, 10) * (thumbs_per_page % 2 === 0 ? (this.props.actionID - _half_per_page) + 0.52 :
+            Math.ceil((this.props.actionID - _half_per_page))))}px)` :
+            'translateY(0px)'
       })
     }
     return (
