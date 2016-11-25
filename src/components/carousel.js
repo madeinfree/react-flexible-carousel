@@ -197,6 +197,9 @@ class Carousel extends Component {
 
 
   _render_thumbs(thumbs_style, thumbs_item_style, specialPosition) {
+    const {
+      custom_thumbs
+    } = this.props
     if (this.props.use_thumbs) {
       if (specialPosition) {
         return (
@@ -212,6 +215,31 @@ class Carousel extends Component {
             handleChangeThumbsID={ this._handleChangeThumbsID.bind(this) } />
         )
       }
+      if (custom_thumbs) {
+        const reactElement = isReactElement(custom_thumbs)
+        const functionElement = isFunction(custom_thumbs)
+        if (reactElement) {
+          return React.createElement(custom_thumbs, {
+            setting: {
+              actionID: this.state.actionID,
+              urls: this.props.urls
+            },
+            handler: {
+              handleChangeThumbsID: this._handleChangeThumbsID.bind(this)
+            }
+          })
+        }
+        if (functionElement) {
+          return custom_thumbs(
+            {
+              actionID: this.state.actionID,
+              urls: this.props.urls
+            },
+            { handleChangeThumbsID: this._handleChangeThumbsID.bind(this) }
+          )
+        }
+        throw new Error('custom thumbs must be react component or function.')
+      }
       return (
         <Thumbs
           thumbsPerPage={ this.props.options.thumbsPerPage }
@@ -222,31 +250,6 @@ class Carousel extends Component {
           urls={ this.props.urls }
           handleChangeThumbsID={ this._handleChangeThumbsID.bind(this) } />
       )
-    }
-    if (custom_thumbs) {
-      const reactElement = isReactElement(custom_thumbs)
-      const functionElement = isFunction(custom_thumbs)
-      if (reactElement) {
-        return React.createElement(custom_thumbs, {
-          setting: {
-            actionID: this.state.actionID,
-            urls: this.props.urls
-          },
-          handler: {
-            handleChangeThumbsID: this._handleChangeThumbsID.bind(this)
-          }
-        })
-      }
-      if (functionElement) {
-        return custom_thumbs(
-          {
-            actionID: this.state.actionID,
-            urls: this.props.urls
-          },
-          { handleChangeThumbsID: this._handleChangeThumbsID.bind(this) }
-        )
-      }
-      throw new Error('custom thumbs must be react component or function.')
     }
     return false
   }
