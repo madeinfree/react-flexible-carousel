@@ -79,7 +79,8 @@ class App extends Component {
             listWidth: document.body.offsetWidth,
             listHeight: 300,
             thumbsPerPage: this.state.thumbsPerPage,
-            start_actionID: 0
+            start_actionID: 0,
+            thumbsPosition: 'right'
           } }
           beforeWrapperMouseOver={ (index, url) => console.log('beforeWrapperMouseOver >', index, url) }
           afterWrapperMouseOver={ (index, url) => console.log('afterWrapperMouseOver >', index, url) }
